@@ -15,3 +15,6 @@ This is a Python-based command-line tool that evaluates the strength of a passwo
 
 ### Purpose
 This project was built to practice Python fundamentals such as loops, conditionals, and string handling, while also introducing basic security concepts.
+
+### Author
+Created by Felix God'spower
