@@ -1,20 +1,29 @@
-## Password Strength Checker
+# 🔐 Real-World Password Checker
 
-This is a Python-based command-line tool that evaluates the strength of a password based on its composition.
+A Python-based password strength analyzer that evaluates passwords using real-world techniques such as character diversity, pattern detection, wordlist comparison, and optional breach database checking.
 
-### Features
-- Secure password input using `getpass`
-- Detects:
-  - Lowercase characters
-  - Uppercase characters
-  - Numbers
-  - Whitespace
-  - Special characters
-- Provides a strength score and feedback
-- Simple and interactive CLI interface
+---
 
-### Purpose
-This project was built to practice Python fundamentals such as loops, conditionals, and string handling, while also introducing basic security concepts.
+## 📌 Features
 
-### Author
-Created by Felix God'spower
+- ✅ Character type analysis (lowercase, uppercase, numbers, spaces, special characters)
+- ✅ Detection of common passwords
+- ✅ Pattern recognition (e.g., "12345", "qwerty")
+- ✅ Repetition checks
+- ✅ Minimum length validation
+- ✅ Wordlist-based password detection (supports multiple files)
+- ✅ Optional Have I Been Pwned API integration
+- ✅ Password strength scoring system
+- ✅ Estimated brute-force crack time calculation
+
+---
+
+## 🛠️ How It Works (Code Walkthrough)
+
+### 🔹 Imports
+
+```python
+import string
+import getpass
+import hashlib
+import requests
