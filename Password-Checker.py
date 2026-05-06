@@ -15,7 +15,7 @@ COMMON_PATTERNS = ["12345", "qwerty", "asdf", "zxcv"]
 
 
 # ---------------- WORDLIST CHECK (MULTI-FILE, STREAM SAFE) ----------------
-def check_in_wordlists(password, files=("rockyou.txt", "anonymousword.txt")):
+def check_in_wordlists(password, files=("hello.txt", )):
     for filename in files:
         try:
             with open(filename, "r", encoding="latin-1") as f:
