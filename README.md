@@ -15,8 +15,7 @@ Built with a hacker-style terminal interface.
 
 # 📸 Features
 
-✅ Animated terminal interface  
-✅ Colored output  
+ 
 ✅ Password strength scoring  
 ✅ Crack time estimation  
 ✅ Common password detection  
