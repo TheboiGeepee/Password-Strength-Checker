@@ -1,0 +1,19 @@
+# 🛠 Requirements
+
+Install Python packages:
+
+```bash
+pip install requests
+
+Python version recommended: Python 3.8+
+
+📂 Wordlist Setup
+
+This script supports custom wordlists.
+
+By default, the script checks: files=("hello.txt",)
+
+Inside= def check_in_wordlists(password, files=("hello.txt",)):
+
+Adding Your Own Wordlists, Put Wordlists In Same Folder
+
