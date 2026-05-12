@@ -1,19 +1,80 @@
-# 🛠 Requirements
+# 📦 Requirements
 
-Install Python packages:
+Install dependencies:
 
 ```bash
 pip install requests
+```
 
-Python version recommended: Python 3.8+
+---
 
-📂 Wordlist Setup
+# 🚀 How To Run
 
-This script supports custom wordlists.
+```bash
+python password_checker.py
+```
 
-By default, the script checks: files=("hello.txt",)
+---
 
-Inside= def check_in_wordlists(password, files=("hello.txt",)):
+# 🖥 Example Interface
 
-Adding Your Own Wordlists, Put Wordlists In Same Folder
+```text
+1. Check Password
+2. Generate Strong Password
+3. Exit
+```
 
+---
+
+# 📁 Optional Wordlist Support
+
+The checker supports custom wordlists.
+
+Default:
+
+```text
+hello.txt
+```
+
+You can replace it with your own password lists.
+
+---
+
+# 🌐 Optional API Support
+
+Enable breach checking by changing:
+
+```python
+USE_API_FALLBACK = True
+```
+
+This enables secure HaveIBeenPwned password exposure checks.
+
+---
+
+# ⚠ Disclaimer
+
+This tool is intended for:
+- Educational purposes
+- Security awareness
+- Password auditing
+- Defensive security testing
+
+Do NOT use this tool for unauthorized access or malicious activities.
+
+---
+
+---
+
+# 🔐 Stay Safe
+
+Strong passwords save accounts.
+
+Use:
+- Long passwords
+- Random passwords
+- Unique passwords
+- Password managers
+- Multi-factor authentication (MFA)
+
+Never reuse passwords across systems.
