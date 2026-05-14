@@ -158,7 +158,7 @@ def calculate_entropy(password, charset):
     return round(entropy, 2)
 
 # ================= STRENGTH BAR =================
-def strength_bar(strength, max_strength=5, length=10):
+def strength_bar(strength, max_strength=4, length=10):
 
     filled = int((strength / max_strength) * length)
     empty = length - filled
@@ -177,27 +177,21 @@ def realistic_crack_time(password, weaknesses, entropy):
     if any(cw in w for w in weaknesses for cw in critical):
         return "Instantly (already exposed)"
 
-    # Very weak
     if entropy < 28:
         return "Less than 1 hour"
 
-    # Weak
     elif entropy < 36:
         return "3 days"
 
-    # Moderate
     elif entropy < 60:
         return "8 months"
 
-    # Strong
     elif entropy < 80:
         return "15 years"
 
-    # Very strong
     elif entropy < 100:
         return "247 years"
 
-    # Extremely strong
     elif entropy < 128:
         return "12,000 years"
 
@@ -240,7 +234,6 @@ def password_generator_mode():
     if mode == EXIT_COMMAND:
         exit_program()
 
-    # ================= PASSWORD LENGTH =================
     try:
 
         length = int(
@@ -369,9 +362,6 @@ def check_pwd():
     if special:
         strength += 1
 
-    if len(password) >= 16:
-        strength += 1
-
     weaknesses = []
 
     # ================= COMMON PASSWORD =================
@@ -447,20 +437,17 @@ def check_pwd():
         if strength < 1:
             strength = 1
 
-        if strength > 5:
-            strength = 5
+        if strength > 4:
+            strength = 4
 
     # ================= PASSWORD RATING =================
     if strength == 1:
-        remarks = "Very Weak Password"
-
-    elif strength == 2:
         remarks = "Weak Password"
 
-    elif strength == 3:
+    elif strength == 2:
         remarks = "Moderate Password"
 
-    elif strength == 4:
+    elif strength == 3:
         remarks = "Strong Password"
 
     else:
