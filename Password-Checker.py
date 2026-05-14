@@ -1,3 +1,5 @@
+import os
+import json
 import string
 import getpass
 import hashlib
@@ -10,6 +12,7 @@ from datetime import datetime
 
 # ================= CONFIG =================
 USE_API_FALLBACK = False
+AUTH_FILE = "auth_data.json"
 
 COMMON_PASSWORDS = {
     "password",
@@ -29,12 +32,232 @@ COMMON_PATTERNS = [
     "zxcv"
 ]
 
+SECURITY_QUESTIONS = [
+    "What is your favorite food?",
+    "What is your favorite color?",
+    "What is your pet's name?",
+    "What city were you born in?",
+    "What is your dream car?"
+]
+
 EXIT_COMMAND = "exit"
+
+# ================= HASH FUNCTION =================
+def hash_text(text):
+
+    return hashlib.sha256(text.encode()).hexdigest()
+
+# ================= SAVE AUTH DATA =================
+def save_auth(password, question, answer):
+
+    data = {
+        "password": hash_text(password),
+        "question": question,
+        "answer": hash_text(answer.lower())
+    }
+
+    with open(AUTH_FILE, "w") as f:
+        json.dump(data, f)
+
+# ================= LOAD AUTH DATA =================
+def load_auth():
+
+    if not os.path.exists(AUTH_FILE):
+        return None
+
+    with open(AUTH_FILE, "r") as f:
+        return json.load(f)
+
+# ================= FIRST TIME SETUP =================
+def first_time_setup():
+
+    print("\n\033[95m=== FIRST TIME SETUP ===\033[0m")
+
+    while True:
+
+        password = getpass.getpass(
+            "\nCreate a master password: "
+        )
+
+        confirm = getpass.getpass(
+            "Confirm password: "
+        )
+
+        if password != confirm:
+
+            print(
+                "\033[91m❌ Passwords do not match.\033[0m"
+            )
+
+            continue
+
+        if len(password) < 8:
+
+            print(
+                "\033[91m❌ Password must be at least 8 characters.\033[0m"
+            )
+
+            continue
+
+        break
+
+    print("\n\033[96mChoose a security question:\033[0m\n")
+
+    for i, q in enumerate(SECURITY_QUESTIONS, start=1):
+
+        print(f"\033[94m{i}.\033[0m {q}")
+
+    while True:
+
+        try:
+
+            choice = int(
+                input("\nSelect question number: ")
+            )
+
+            if 1 <= choice <= len(SECURITY_QUESTIONS):
+
+                question = SECURITY_QUESTIONS[choice - 1]
+                break
+
+            else:
+
+                print(
+                    "\033[91m❌ Invalid selection.\033[0m"
+                )
+
+        except ValueError:
+
+            print(
+                "\033[91m❌ Enter a valid number.\033[0m"
+            )
+
+    answer = input(f"\n{question} ").strip()
+
+    save_auth(password, question, answer)
+
+    print(
+        "\n\033[92m✅ Account setup completed successfully!\033[0m"
+    )
+
+# ================= FORGOT PASSWORD =================
+def forgot_password():
+
+    data = load_auth()
+
+    print("\n\033[95m=== PASSWORD RECOVERY ===\033[0m")
+
+    answer = input(
+        f"\n{data['question']} "
+    ).strip().lower()
+
+    if hash_text(answer) == data["answer"]:
+
+        print(
+            "\n\033[92m✅ Security answer verified.\033[0m"
+        )
+
+        while True:
+
+            new_password = getpass.getpass(
+                "\nEnter new password: "
+            )
+
+            confirm = getpass.getpass(
+                "Confirm new password: "
+            )
+
+            if new_password != confirm:
+
+                print(
+                    "\033[91m❌ Passwords do not match.\033[0m"
+                )
+
+                continue
+
+            if len(new_password) < 8:
+
+                print(
+                    "\033[91m❌ Password too short.\033[0m"
+                )
+
+                continue
+
+            break
+
+        save_auth(
+            new_password,
+            data["question"],
+            answer
+        )
+
+        print(
+            "\n\033[92m✅ Password reset successful!\033[0m"
+        )
+
+    else:
+
+        print(
+            "\n\033[91m❌ Incorrect security answer.\033[0m"
+        )
+
+# ================= LOGIN =================
+def login():
+
+    data = load_auth()
+
+    if not data:
+
+        first_time_setup()
+        return True
+
+    attempts = 3
+
+    while attempts > 0:
+
+        password = getpass.getpass(
+            "\n\033[93mEnter master password: \033[0m"
+        )
+
+        if hash_text(password) == data["password"]:
+
+            print(
+                "\n\033[92m✅ Login successful!\033[0m"
+            )
+
+            return True
+
+        attempts -= 1
+
+        print(
+            f"\033[91m❌ Incorrect password. "
+            f"{attempts} attempt(s) remaining.\033[0m"
+        )
+
+    print("\n1. Try Again")
+    print("2. Forgot Password")
+    print("3. Exit")
+
+    choice = input("\nChoose option: ").strip()
+
+    if choice == "1":
+
+        return login()
+
+    elif choice == "2":
+
+        forgot_password()
+        return login()
+
+    else:
+
+        sys.exit()
 
 # ================= ANIMATED TEXT =================
 def animated_text(text, delay=0.02):
 
     for char in text:
+
         sys.stdout.write(char)
         sys.stdout.flush()
         time.sleep(delay)
@@ -73,6 +296,7 @@ def fancy_exit_with_dots(
 ):
 
     for _ in range(dots):
+
         sys.stdout.write(".")
         sys.stdout.flush()
         time.sleep(dot_delay)
@@ -80,6 +304,7 @@ def fancy_exit_with_dots(
     print()
 
     for char in message:
+
         sys.stdout.write(char)
         sys.stdout.flush()
         time.sleep(delay)
@@ -107,9 +332,11 @@ def check_in_wordlists(password, files=("hello.txt",)):
                 for line in f:
 
                     if line.strip() == password:
+
                         return f"Found in {filename}"
 
         except FileNotFoundError:
+
             continue
 
     return None
@@ -117,12 +344,16 @@ def check_in_wordlists(password, files=("hello.txt",)):
 # ================= HIBP API =================
 def check_pwned_api(password):
 
-    sha1_pwd = hashlib.sha1(password.encode()).hexdigest().upper()
+    sha1_pwd = hashlib.sha1(
+        password.encode()
+    ).hexdigest().upper()
 
     prefix = sha1_pwd[:5]
     suffix = sha1_pwd[5:]
 
-    url = f"https://api.pwnedpasswords.com/range/{prefix}"
+    url = (
+        f"https://api.pwnedpasswords.com/range/{prefix}"
+    )
 
     try:
 
@@ -133,6 +364,7 @@ def check_pwned_api(password):
         )
 
         if res.status_code != 200:
+
             return None
 
         for line in res.text.splitlines():
@@ -140,17 +372,20 @@ def check_pwned_api(password):
             h, count = line.split(":")
 
             if h == suffix:
+
                 return int(count)
 
         return 0
 
     except requests.RequestException:
+
         return None
 
 # ================= PASSWORD ENTROPY =================
 def calculate_entropy(password, charset):
 
     if charset == 0:
+
         return 0
 
     entropy = len(password) * math.log2(charset)
@@ -158,15 +393,31 @@ def calculate_entropy(password, charset):
     return round(entropy, 2)
 
 # ================= STRENGTH BAR =================
-def strength_bar(strength, max_strength=4, length=10):
+def strength_bar(
+    strength,
+    max_strength=4,
+    length=10
+):
 
-    filled = int((strength / max_strength) * length)
+    filled = int(
+        (strength / max_strength) * length
+    )
+
     empty = length - filled
 
-    return "[" + "█" * filled + "░" * empty + f"] {strength}/{max_strength}"
+    return (
+        "[" +
+        "█" * filled +
+        "░" * empty +
+        f"] {strength}/{max_strength}"
+    )
 
 # ================= REALISTIC CRACK TIME =================
-def realistic_crack_time(password, weaknesses, entropy):
+def realistic_crack_time(
+    password,
+    weaknesses,
+    entropy
+):
 
     critical = [
         "Common password",
@@ -174,28 +425,40 @@ def realistic_crack_time(password, weaknesses, entropy):
         "Found in breaches"
     ]
 
-    if any(cw in w for w in weaknesses for cw in critical):
+    if any(
+        cw in w
+        for w in weaknesses
+        for cw in critical
+    ):
+
         return "Instantly (already exposed)"
 
     if entropy < 28:
+
         return "Less than 1 hour"
 
     elif entropy < 36:
+
         return "3 days"
 
     elif entropy < 60:
+
         return "8 months"
 
     elif entropy < 80:
+
         return "15 years"
 
     elif entropy < 100:
+
         return "247 years"
 
     elif entropy < 128:
+
         return "12,000 years"
 
     else:
+
         return "Millions of years"
 
 # ================= PASSWORD GENERATOR =================
@@ -220,18 +483,22 @@ def generate_strong_password(length=20):
             any(c.isdigit() for c in password) and
             any(c in string.punctuation for c in password)
         ):
+
             return password
 
 # ================= PASSWORD GENERATOR MODE =================
 def password_generator_mode():
 
-    print("\n\033[95m--- Password Generator ---\033[0m")
+    print(
+        "\n\033[95m--- Password Generator ---\033[0m"
+    )
 
     mode = input(
         "\nGenerate for Individual or Company? (i/c): "
     ).strip().lower()
 
     if mode == EXIT_COMMAND:
+
         exit_program()
 
     try:
@@ -268,7 +535,6 @@ def password_generator_mode():
 
         return
 
-    # ================= INDIVIDUAL =================
     if mode == "i":
 
         password = generate_strong_password(length)
@@ -277,7 +543,6 @@ def password_generator_mode():
             f"\n\033[92mGenerated Password:\033[0m\n{password}"
         )
 
-    # ================= COMPANY =================
     elif mode == "c":
 
         try:
@@ -327,8 +592,8 @@ def check_pwd():
         "\n\033[93mEnter Password (or type exit): \033[0m"
     )
 
-    # ================= EXIT =================
     if password.strip().casefold() == EXIT_COMMAND:
+
         exit_program()
 
     strength = 0
@@ -338,18 +603,21 @@ def check_pwd():
     for c in password:
 
         if c in string.ascii_lowercase:
+
             lower += 1
 
         elif c in string.ascii_uppercase:
+
             upper += 1
 
         elif c in string.digits:
+
             num += 1
 
         else:
+
             special += 1
 
-    # ================= BASE STRENGTH =================
     if lower:
         strength += 1
 
@@ -364,11 +632,10 @@ def check_pwd():
 
     weaknesses = []
 
-    # ================= COMMON PASSWORD =================
     if password.lower() in COMMON_PASSWORDS:
+
         weaknesses.append("Common password")
 
-    # ================= COMMON PATTERNS =================
     for pattern in COMMON_PATTERNS:
 
         if pattern in password.lower():
@@ -379,21 +646,18 @@ def check_pwd():
 
             break
 
-    # ================= REPEATED CHARS =================
     if len(set(password)) <= 2:
 
         weaknesses.append(
             "Too many repeated characters"
         )
 
-    # ================= SHORT PASSWORD =================
     if len(password) < 8:
 
         weaknesses.append(
             "Too short (minimum 8 characters)"
         )
 
-    # ================= WORDLIST CHECK =================
     wordlist_result = check_in_wordlists(password)
 
     if wordlist_result:
@@ -416,7 +680,6 @@ def check_pwd():
 
             strength -= 2
 
-    # ================= CRITICAL WEAKNESS =================
     critical_weaknesses = [
         "Common password",
         "Found in wordlist",
@@ -428,6 +691,7 @@ def check_pwd():
         for w in weaknesses
         for cw in critical_weaknesses
     ):
+
         strength = 1
 
     else:
@@ -440,20 +704,22 @@ def check_pwd():
         if strength > 4:
             strength = 4
 
-    # ================= PASSWORD RATING =================
     if strength == 1:
+
         remarks = "Weak Password"
 
     elif strength == 2:
+
         remarks = "Moderate Password"
 
     elif strength == 3:
+
         remarks = "Strong Password"
 
     else:
+
         remarks = "Very Strong Password"
 
-    # ================= CHARACTER SET =================
     charset = 0
 
     if lower:
@@ -470,8 +736,9 @@ def check_pwd():
 
     entropy = calculate_entropy(password, charset)
 
-    # ================= OUTPUT =================
-    print("\n\033[95m--- Password Analysis ---\033[0m")
+    print(
+        "\n\033[95m--- Password Analysis ---\033[0m"
+    )
 
     print(
         f"\033[96mLowercase:\033[0m {lower}, "
@@ -489,10 +756,11 @@ def check_pwd():
         f"\033[96mEntropy:\033[0m {entropy} bits"
     )
 
-    # ================= WEAKNESSES =================
     if weaknesses:
 
-        print("\n\033[91m⚠️ Weaknesses detected:\033[0m")
+        print(
+            "\n\033[91m⚠️ Weaknesses detected:\033[0m"
+        )
 
         for weakness in weaknesses:
 
@@ -504,7 +772,6 @@ def check_pwd():
             "\n\033[92m✅ No obvious weaknesses detected\033[0m"
         )
 
-    # ================= CRACK TIME =================
     print(
         "\n\033[95m--- Realistic Crack Estimate ---\033[0m"
     )
@@ -515,7 +782,6 @@ def check_pwd():
         f"\033[0m"
     )
 
-    # ================= MEMORY CLEANUP =================
     del password
 
 # ================= MAIN MENU =================
@@ -538,6 +804,10 @@ def main_menu():
 # ================= MAIN =================
 if __name__ == "__main__":
 
+    if not login():
+
+        exit()
+
     intro = f"""
 \033[96m╔════════════════════════════════════════════════════╗
 ║        Welcome to a Real-World Password Checker   ║
@@ -557,6 +827,7 @@ if __name__ == "__main__":
 \033[92m✔ Entropy Calculation\033[0m
 \033[92m✔ Secure Password Generator\033[0m
 \033[92m✔ Individual & Company Password Generation\033[0m
+\033[92m✔ Login & Recovery System\033[0m
 
 \033[94mStay safe and use strong passwords.\033[0m
 """
